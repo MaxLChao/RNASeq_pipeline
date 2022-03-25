@@ -1,0 +1,13 @@
+Status	zmp_ph120_A/zmp_ph120_A_merged_1_val_1.fq.gzAligned.sortedByCoord.out.bam	zmp_ph120_B/zmp_ph120_B_merged_1_val_1.fq.gzAligned.sortedByCoord.out.bam	zmp_ph120_C/zmp_ph120_C_merged_1_val_1.fq.gzAligned.sortedByCoord.out.bam	zmp_ph120_D/zmp_ph120_D_merged_1_val_1.fq.gzAligned.sortedByCoord.out.bam	zmp_ph120_E/zmp_ph120_E_merged_1_val_1.fq.gzAligned.sortedByCoord.out.bam	zmp_ph121_A/zmp_ph121_A_merged_1_val_1.fq.gzAligned.sortedByCoord.out.bam	zmp_ph121_B/zmp_ph121_B_merged_1_val_1.fq.gzAligned.sortedByCoord.out.bam	zmp_ph121_C/zmp_ph121_C_merged_1_val_1.fq.gzAligned.sortedByCoord.out.bam	zmp_ph121_D/zmp_ph121_D_merged_1_val_1.fq.gzAligned.sortedByCoord.out.bam	zmp_ph121_E/zmp_ph121_E_merged_1_val_1.fq.gzAligned.sortedByCoord.out.bam	zmp_ph122_A/zmp_ph122_A_merged_1_val_1.fq.gzAligned.sortedByCoord.out.bam	zmp_ph122_B/zmp_ph122_B_merged_1_val_1.fq.gzAligned.sortedByCoord.out.bam	zmp_ph122_C/zmp_ph122_C_merged_1_val_1.fq.gzAligned.sortedByCoord.out.bam	zmp_ph122_D/zmp_ph122_D_merged_1_val_1.fq.gzAligned.sortedByCoord.out.bam	zmp_ph122_F/zmp_ph122_F_merged_1_val_1.fq.gzAligned.sortedByCoord.out.bam
+Assigned	8973477	8415920	9552737	9334457	9188323	9053314	8223385	10208056	8902573	8854339	8199155	7912029	8476247	7755117	7479197
+Unassigned_Unmapped	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Unassigned_MappingQuality	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Unassigned_Chimera	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Unassigned_FragmentLength	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Unassigned_Duplicate	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Unassigned_MultiMapping	936092	798475	920817	928209	1031493	825886	753472	951463	807807	815902	797198	787623	839066	749845	735573
+Unassigned_Secondary	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Unassigned_Nonjunction	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Unassigned_NoFeatures	1958475	1795441	2097508	2078540	1987715	1972544	1822764	2254801	1987525	1935979	1763165	1849291	1971521	1746140	1726661
+Unassigned_Overlapping_Length	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Unassigned_Ambiguity	192854	179572	208969	202148	211523	195135	175463	221293	193599	191106	179150	172342	184030	170558	163338

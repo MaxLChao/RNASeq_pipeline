@@ -12,18 +12,22 @@ Here I go into:
  - Genebody Coverage plot (py-rseqc)
  - Convert Dataset into  DeSeq2 obj
  - sizefactor plots
- - normaliz	ed
+ - normalized
  
- ## DESeqAnalysis
+## DESeqAnalysis
  
  Here I go into:
  - generating DEGs
  - displaying DEGs in heatmap + volcano plot format
- - sankey
  - Pathway analysis
  
- ## final_report
+## final_report
  
  Here I go into:
- - introduction of why I chose this project with 
- 
+ - introduction
+ - results
+ - methods
+ - discussion
+
+## Slides
+https://docs.google.com/presentation/d/1Zz7258dHtTJUJ7VE1MFs1jAYoc9Own0ckFuuVojZfrs/edit?usp=sharing

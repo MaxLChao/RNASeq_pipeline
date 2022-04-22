@@ -134,7 +134,9 @@ These limitations do reduce the power of this experiment and does limit any conc
 
 ## Conclusions
 
-From this analysis, we do see that with respect to DEGs, the time points are different, and the earliest timepoint for my analysis, Protruding Mouth, was especially different when compared to the last two timepoints. The Hox family does seem to play a role in differentiation, but by Day-5 we saw that the overall gene expression of the  was significantly down when compared to the first timepoint. Further analysis of the in between timepoints could give us a better understanding of this decrease in the curve over time. Finally, the GSEA does further confirm that there is a variety of genes that are playing a role in this differentiatiob, however for the most significant NES, many of these Reactome pathways are overlapping and draw heavily from Proteosome expression, or in the case of day 5, a marked increase in ribosomal expression, which may be due to its smaller size factor bias.
+From this analysis, we do see that with respect to DEGs, the time points are different, and the earliest timepoint for my analysis, Protruding Mouth, was especially different when compared to the last two timepoints. The Hox family does seem to play a role in differentiation, but by Day-5 we saw that the overall gene expression of the  was significantly down when compared to the first timepoint. Further analysis of the in between timepoints could give us a better understanding of this decrease in the curve over time. Finally, the GSEA does further confirm that there is a variety of genes that are playing a role in this differentiation. However for the most significantly enriched pathways, many are overlapping and draw heavily from the same gene families like Proteosome expression, or in the case of day 5 vs day 4, a marked increase in ribosomal expression, which may be due to its smaller size factor bias. 
+
+Overall, I have a hard time trying to make any concrete conclusions, as I am a little nervous with the lack of depth across basically every gene. I am much more used to seeing gene counts in the the hundreds to thousands, while most of these genes counts are relatively sparse, with the largest gene counts being in the hundreds. Small variability in gene expression at low counts lead to higher variability and can lead to biased results and logfoldchanges. However, taking into account the data and understanding that embryo transcriptomic expression is always much smaller than full grown mouse models, I do believe that these three timepoints do show potential that there are clear gene groups that do help define and express certain portions of an embryo's development.
 
 
 # Methods
@@ -151,7 +153,7 @@ From this analysis, we do see that with respect to DEGs, the time points are dif
 ## DESeq Analysis
 
 Here we looked into the QC. In these steps we looked at the feature counts summary plot, gene body coverage, along with a basic rlog'd PCA of the object. Code to generate these figures are included in the [qc_processing.Rmd](qc_processing.html), along with other plots generated that glanced more into the QC. To mention, the samples all had around 44-45% GC content across the board. These samples were all pooled and each sample is a technical replicate. From our glance into our samples we also realize that many of the reads did not fit into our transcripts as they have binded to UTR regions.
-```{r QCfigure_p1, fig.height=28, fig.width=28,out.height="99%", echo=FALSE}
+```{r QCfigure_p1, fig.height=8, fig.width=28,out.height="99%", echo=FALSE}
 knitr::include_graphics("outputs/PCA_rlog.png")
 ```
 ```{r QCfigure_p2, fig.height=28, fig.width=28,out.height="99%", echo=FALSE, out.width="49%"}
@@ -161,10 +163,9 @@ knitr::include_graphics(c("outputs/sizefactorvsgroup.png", "outputs/genebody.gen
 knitr::include_graphics("outputs/featurecounts_summary.png")
 ```
 
-From this we do see that that the data is relatively sparse as we only have ~5M reads per sample, but the samples are highly variable as we see a clear differentiation in the first PC across all our sample groups, meaning the majority of the transcriptional change that was captured is along our timecourse. The gene body coverage plot does display the expected genebody coverage as this not polyA enriched library prep, so we will not see the typical 3 'end bias. 
+From this we do see that that the data is relatively sparse as we only have ~5M reads per sample, but the samples are highly variable as we see a clear differentiation in the first PC across all our sample groups, meaning the majority of the transcriptional change that was captured is along our timecourse. The gene body coverage plot does display the expected genebody coverage as this not polyA enriched library prep, so we will not see the typical 3 'end bias. We do see some size factor bias scaling with the 5 day time point. It seems these samples also had the least number of total reads, which translated into features assigned and now a factor bias. This is definitely non-trivial as we already are pretty low on reads as it is.
 
-
-However, we do have a decent number of unassigned features (~10-20% of total reads). More work can be done to assign them, as in the original paper's protocol, they looked at lincRNA and miRNA for these total RNA samples, but this would require further alignment work. Taking a glance into IGV to see what could these no assignment features be... 
+To add on this, we do have a decent number of unassigned features (~10-20% of total reads). More work can be done to assign them, as in the original paper's protocol, they looked at lincRNA and miRNA for these total RNA samples, but this would require further alignment work. Taking a glance into IGV to see what could these no assignment features be... 
 
 ```{r QC_figure_p4, ig.height=28, fig.width=28,out.height="99%", echo=FALSE, fig.cap = "QC IGV Hoxa3a"}
 knitr::include_graphics("outputs/hoxa3aigv_snapshot.png")
@@ -193,7 +194,7 @@ Figures were generated using fgsea and msigdbr. Here I used msigdbr to grab the 
 Heatmaps were generated via `pheatmap`. Both figures were generated via a grep search for the specific genes in question (hox* for hox and ^rps[0-9]|^rpl[0-9] for ribosomal genes). From there the samples were relabeled using the symbol names instead of ensembl IDs to improve interpretability. Samples were column and row clustered to better understand how the samples cluster against each other with respect to the genes in question.
 
 
-## Dataset
+## Dataset Manipulation
 
 Glancing into our DESeq dataset object:
 
@@ -227,11 +228,39 @@ The replicates are already pooled samples, which means that the signature of eac
 
 Finally, alignment of the non-transcriptome RNAs and assignment of these promoter region and intron RNAs would also be a way to improve this analysis. Recovery of the ~1M or so unassigned/no Feature reads could improve downstream analysis, but this would require some more reading/a better understanding of what to do with them on my part on how to deal with those reads.
 
-
+Also, the annotation of this species is kind of silly. There are multi-to-multi mapping for gene symbols to gene ids everywhere. There are multiple genes mapped to the same gene id, and also multiple mapping of gene ids to various genes, which is a whole host of issues. I initially rectified this by combining the gene symbols together for each id, but I am unsure if this was the right solution here.
 
 # Data Availability
 Data and scripts used for this pipeline can be found here:
 [Link](https://github.com/MaxLChao/RNASeq_pipeline.git)
+
+## Data Descriptions
+
+*In outputs:*
+
+| data           |                      description |
+| ---            |                              --- |
+| dds.rds        | non-split 3 timepoints DESeq obj |
+| dds4v5.rds     | 4v5 timepoints DESeq obj         |
+| dds4vM.rds     | 4vM timepoints DESeq obj         |
+| dds5v5M.rds    | 5vM timepoints DESeq obj         |
+
+*In metadata:*
+
+metadata for the ENA project. These files were used by scripts to call and download files as well as initial annotations
+
+*scripts:*
+
+Preprocessing scripts to download and process the data
+
+*Reports:*
+
+final_report: description of project, thoughts and conclusions
+qc_processing: all qc and data pre processing steps
+DESeqAnalysis: DESeqAnalysis for DEGs and GSEA.
+
+
+
 
 ```{r, knitrReport, echo=FALSE}
 knitr::knit_exit()

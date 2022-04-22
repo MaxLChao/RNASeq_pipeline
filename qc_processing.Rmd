@@ -93,10 +93,11 @@ geneBody_coverage.py -i files.txt -r daniorer11.ensemblgenes.nochr.bed -f 'jpeg'
 
 ```
 
-```{r genebodycov_vis}
-
-#knitr::include_graphics("genebodycoverage.jpeg")
+```{r genebodycov_vis, fig.height=28, fig.width=28, fig.show='hold', out.width="49%", out.height="95%", echo=FALSE}
+knitr::include_graphics(c("outputs/genebody.geneBodyCoverage.curves.jpeg","outputs/genebody.geneBodyCoverage.heatMap.jpeg"))
 ```
+
+Looks about right as these are not poly A enriched, so we do not have the heavy 3' end bias we would normally see for poly A enriched mRNA.
 
 ## Visualizing one of the BAMs
 Here I just wanted to look at one of the genes for a few BAMS via IGV just to see what is there. Looking into it hox3a3...

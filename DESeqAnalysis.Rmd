@@ -1,0 +1,135 @@
+---
+title: "DESeqAnalysis"
+output: html_notebook
+---
+
+```{r setup, warning=FALSE, message=FALSE}
+library(DESeq2)
+library(magrittr)
+library(EnhancedVolcano)
+dds4v5 = readRDS("outputs/dds4v5.rds")
+dds4vM = readRDS("outputs/dds4vM.rds")
+dds5vM = readRDS("outputs/dds5vM.rds")
+```
+
+# Analyzing the DESeq output
+
+Here we run DESeq2 to get our DEGs for our contrasts of choice:
+We will compare the three different timepoints against each other, generating a total of 3 contrasts.
+1. protruding mouth vs day 4
+2. day 4 vs day 5
+3. protruding mouth vs day 5
+
+```{r Generating DEGs for groups}
+dds4v5$stageName <- droplevels(dds4v5$stageName)
+dds4vM$stageName <- droplevels(dds4vM$stageName)
+dds5vM$stageName <- droplevels(dds5vM$stageName)
+dds4v5 = DESeq(dds4v5)
+dds4vM = DESeq(dds4vM)
+dds5vM = DESeq(dds5vM)
+res4v5 <- results(dds4v5, test = "Wald")
+res4vM <- results(dds4vM, test = "Wald")
+res5vM <- results(dds5vM, test = "Wald")
+```
+
+```{r outputs}
+res5vM = lfcShrink(dds=dds5vM, coef = "stageName_Day.5_vs_Protruding.mouth",res = res5vM, type = "ashr")
+res4vM = lfcShrink(dds=dds4vM, coef = "stageName_Day.4_vs_Protruding.mouth",res = res4vM, type = "ashr")
+res4v5 = lfcShrink(dds4v5, contrast = c("stageName", "Day.4", "Day.5"),res = res4v5, type="ashr")
+```
+Here we us LFCshrink via ashr to shrink our logfold2 changes from the DESeq outputs with respect to our contrasts. We do not use normal type as ashr and apeglm both outperform normal here.
+
+
+## Dispersion Estimates
+
+Here we glance into our data to see if the model is well fit to the data:
+```{r dispestimates, fig.show='hold'}
+plotDispEsts(dds4v5)
+plotDispEsts(dds4vM)
+plotDispEsts(dds5vM)
+```
+
+Everything looks mostly okay here; it mostly fits the "normal look" here.
+
+
+## Top Genes expressed in Day 5 vs Mouth Protruding
+```{r top counts 5vM, fig.show='hold', out.width="50%"}
+(for (i in order(res5vM$padj, decreasing = F)[1:5]){
+  plotCounts(dds5vM, gene=i, intgroup="stageName", main = "") 
+  title(rowData(dds5vM)[rownames(res5vM[i,]),]$SYMBOL)
+})
+```
+
+### Volcano Plot
+
+```{r volcanofivevM, fig.height=16, fig.width=8}
+fiveMplot = EnhancedVolcano(res5vM,
+  lab = rowData(dds5vM)$SYMBOL,
+  x = 'log2FoldChange',
+  y = 'pvalue')
+
+fiveMplot
+ggsave("outputs/fivevsMvolcano.pdf", height = 16, width = 8)
+
+```
+
+## Top Genes for expressed Day4 vs mouth Protruding
+
+```{r day4vM,fig.show='hold', out.width="50%"}
+(for (i in order(res4vM$padj, decreasing = F)[1:5]){
+  plotCounts(dds4vM, gene=i, intgroup="stageName", main = "") 
+  title(rowData(dds4vM)[rownames(res4vM[i,]),]$SYMBOL)
+})
+```
+
+### Volcano Plot
+
+```{r volcanofourvM, fig.height=16, fig.width=8}
+fourMplot = EnhancedVolcano(res4vM,
+  lab = rowData(dds4vM)$SYMBOL,
+  x = 'log2FoldChange',
+  y = 'pvalue')
+
+fourMplot
+ggsave("outputs/fourvsMvolcano.pdf", height = 16, width = 8)
+```
+
+## significant genes 4v5
+
+```{r day4v5,fig.show='hold', out.width="50%"}
+(for (i in order(res4v5$padj, decreasing = F)[1:5]){
+  plotCounts(dds4v5, gene=i, intgroup="stageName", main = "") 
+  title(rowData(dds4v5)[rownames(res4v5[i,]),]$SYMBOL)
+})
+```
+
+### Volcano plot 4v5
+
+```{r volcanofourvfive, fig.height=16, fig.width=8}
+fourfiveplot = EnhancedVolcano(res4v5,
+  lab = rowData(dds4v5)$SYMBOL,
+  x = 'log2FoldChange',
+  y = 'pvalue')
+
+fourfiveplot
+ggsave("outputs/fourvsfivevolcano.pdf", height = 16, width = 8)
+```
+fro mall of this we do see that HOx genes are not the most DEgenes. Instead we see the two DE genes that seem to be related to the trypsin? ctrl and prss1. 
+
+Many of the other top genes are interspersed through many other gene ontologies, including fatty acid metaboloism/transport, and location specific markers i.e. (cyp3a65 is expressed in the membrane of these structures: digestive system, eye, gill, heart and ovary.)
+
+## HOX genes only
+
+Since this was my original question, let's filter and generate a heatmap of just the HOX genes, and let's see if we get some variability here.
+
+```{r heatmapHOX, fig.height=12, fig.width=8}
+library(pheatmap)
+dds = readRDS("outputs/dds.rds")
+ntd<-normTransform(dds)
+select <- grep(rowData(ntd)$SYMBOL,pattern="hox")
+df <- as.data.frame(colData(dds)[,"stageName"])
+pheatmap(assay(ntd)[select,], cluster_rows=FALSE, show_rownames=TRUE,
+         cluster_cols=TRUE, annotation_col=df)
+
+```
+

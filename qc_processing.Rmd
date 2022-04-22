@@ -13,9 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Overall it seems that the samples were all of good quality and less than 25% duplication rate. These samples were pre-trimmed using trimgalore, and then aligned. We do not have a lot of reads (5-7M) per sample, so the power of this experiment will be relatively low. I will be mainly concerned with differential hox expression, so hopefully we see that?
 
-So for the most part MultiQC does seem to fail all samples for GC content as most of the samples are below 50%. However it is uniform across all samples. The data itself is not going to be obviously of the highest quality as we are working with hundreds to low thousands number of cells per embryo, meaning total RNA capture will be capturing whatever we can get. 
-
-I think that due to the homogeneity of this bias, it's probably okay to work with it with the caveat knowing we should not expect even capture of all genes. (Also expected as these are embryoes.)
+So for the most part MultiQC does seem to fail all samples for GC content as most of the samples are below 50%. However it is uniform across all samples. The data itself is not going to be obviously of the highest quality as we are working with hundreds to low thousands number of cells per embryo, meaning total RNA capture will be capturing whatever we can get.  I think that due to the homogeneity of this bias, it's probably okay to work with it with the caveat knowing we should not expect even capture of all genes equally. (Also expected as these are embryoes, and not all genes will be expressed during development.) We should expect homogeneity as well due to the way the samples are prepped via pooling of embryoes, meaning that the samples are actually technical replicates of the same pooling of samples. This pooling is essential as the a single embryo's genetic signatures would be quite sparse especially at the earlier timepoints of their timecourse.
 
 
 ## Loading in feature counts
@@ -84,31 +82,57 @@ ge
 
 ```
 
-We don't have too much reads to due these being embryos, but it will have to do. Decent number of unassigned features, which also may be expected due to these being embryos as well...
+We don't have too much reads to due these being embryos, but it will have to do. Decent number of unassigned features, which also may be expected due to the data containing total RNA. In their actual processing script, they performed novel transcript mapping to find novel genes, and discovered 127 novel genes. We did not do this here as we are using a much newer build of the genome, which included their additions. Another thing that was not taken into account was the fact that this was total RNA which can contain miRNAs, lincRNAs, and other RNA stored. We will probably see a decent number of these fragments either multimapped either to shorter lengths, or no features if they do not line up with known transcripts. We find that ~1M reads for each samples did not align to a transcript, likely meaning they are not typical mRNA.
 
+
+## Gene Body Coverage plot
+
+```{genebodycoverage, eval=FALSE, echo=FALSE}
+geneBody_coverage.py -i files.txt -r daniorer11.ensemblgenes.nochr.bed -f 'jpeg' -o genebody
+#where files.txt is a list of the bam files after sort and index
+
+```
+
+```{r genebodycov_vis}
+
+#knitr::include_graphics("genebodycoverage.jpeg")
+```
+
+## Visualizing one of the BAMs
+Here I just wanted to look at one of the genes for a few BAMS via IGV just to see what is there. Looking into it hox3a3...
+
+```{r knitrigv, fig.height=12, fig.width=12}
+knitr::include_graphics("outputs/hoxa3aigv_snapshot.png")
+```
+
+Here we do see that there is actually some reads capturing not just the exons, but we seem to be capturing around the genes as well. I'm sure Merv would have a good time looking into the UTRs that do have some expression as we are getting some probably before and around the promoter, as well as after the gene. 
 
 ## Processing
 
 ```{r intoDeSeq, message=FALSE,warning=FALSE}
 library(DESeq2)
 coldat= metadata_table[grep("zmp_ph12[0-2]_[A-H]$", x=metadata_table$sample),]
-
-days=model.matrix(~stageName, coldat)
+coldat$stageName = gsub(coldat$stageName, pattern = "-", replacement = ".")
+coldat$stageName = as.factor(coldat$stageName) %>%  relevel(., ref = "Protruding.mouth")
 dds = DESeqDataSetFromMatrix(countData = data.frame(feat_counts[,-(2:6)]),
                              colData = coldat,
-                             design = days,
+                             design = ~ stageName,
                              tidy = T)
 rowData(dds) = f_row_dat
+dds=dds[-which(rowSums(counts(dds))==0),]
 
 # Size factor
 dds <- estimateSizeFactors(dds) # calculate SFs, add them to object
-plot( sizeFactors(dds), colSums(counts(dds)), # assess them
+plot(x=sizeFactors(dds), y=colSums(counts(dds)), col=factor(colData(dds)$stageName), # assess them
 ylab = "library sizes", xlab = "size factors", cex = .6 )
-
+legend("topleft",
+       legend = levels(factor(colData(dds)$stageName)),
+       pch = 19,
+       col = factor(levels(factor(colData(dds)$stageName))))
 ```
 
 
-Ok... pretty linear.
+Ok... pretty linear. Some issues with size factor as day 5 seems to be smallest.   
 
 ```{r comparing counts, figures-side, fig.show="hold", out.width="50%"}
 
@@ -119,11 +143,11 @@ counts_sf_norm <- counts(dds, normalized=TRUE)
 
 boxplot(log2(counts(dds)+1), notch=TRUE,
 main = "Non-normalized read counts",
-ylab="log2(read counts)", cex = .5, xaxt="n")
+ylab="log2(read counts)", cex = .5, xaxt="n", col=factor(colData(dds)$stageName))
 
 boxplot(log2(counts_sf_norm+1), notch=TRUE,
 main = "Size-factor-norm-ed read counts",
-ylab="log2(read counts)", cex = .5,xaxt="n")
+ylab="log2(read counts)", cex = .5,xaxt="n", col=factor(colData(dds)$stageName))
 
 ```
 
@@ -137,3 +161,13 @@ plotPCA(rlog_dds,intgroup="stageName")
 
 Ok. That's actually really nice. We clearly are getting a nice differentiation of samples with respect to each other and also with respect to the time course. (Protruding-Mouth is a stage before day 4 and 5). So ~90% of the variance with respect to these samples and their low counts are due to "treatment"/time course difference. 
 
+```{r savedds}
+dds1 = dds[,grep(pattern = "Day.4|Protruding.mouth", colnames(dds))]
+dds2 = dds[,grep(pattern = "Day.5|Protruding.mouth", colnames(dds))]
+dds3 = dds[,grep(pattern = "Day.5|Day.4", colnames(dds))]
+
+saveRDS(dds1, "outputs/dds4vM.rds")
+saveRDS(dds2, "outputs/dds5vM.rds")
+saveRDS(dds3, "outputs/dds4v5.rds")
+saveRDS(dds, "outputs/dds.rds")
+```

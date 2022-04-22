@@ -49,6 +49,9 @@ done
 # here we summarize and generate the multiqc output
 multiqc $fastqc_dir
 bams=$(ls zmp_ph12*/*.bam)
-featureCounts -a $gDir/Danio_rerio.GRCz11.105.gtf -T 6 -o zebra_counts.txt ${bams[@]}
-
-#
+# samples were found to be s2 stranded via check of s1 s2 for zmp_ph120_A
+#featureCounts -p -a $gDir/Danio_rerio.GRCz11.105.gtf -T 6 -s 1 --countReadPairs -o Final_counts_s1.txt ${bams[@]}
+#featureCounts -p -a $gDir/Danio_rerio.GRCz11.105.gtf -T 6 -s 0 --countReadPairs -o Final_counts_s0.txt ${bams[@]}
+#featureCounts -p -a $gDir/Danio_rerio.GRCz11.105.gtf -T 6 -s 2 --countReadPairs -o Final_counts_s2.txt ${bams[@]}
+# this was checked to see how all aligned
+featureCounts -p -a $gDir/Danio_rerio.GRCz11.105.gtf -T 6 -s 2 -o zebra_counts.txt ${bams[@]}

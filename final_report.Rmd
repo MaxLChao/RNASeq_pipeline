@@ -1,0 +1,149 @@
+---
+title: "Final Report: Zebrafish"
+author: "Max Chao"
+date: "4/20/2022"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: hide
+  editor_options:
+    chunk_output_type: console
+---
+
+```{css, echo = FALSE}
+/* Styles for YAML title, author and header  */
+h1.title {
+  font-size: 25px;
+  color: DarkBlue;
+  text-align: center;
+}
+h4.author { 
+    font-size: 18px;
+    text-align: center;
+    color: DarkBlue;
+}
+h4.date { 
+  font-size: 18px;
+  text-align: center;
+  color: DarkBlue;
+}
+/* Styles for other report elements  */
+h1 {
+  font-size: 24px;
+  color: DarkBlue;
+}
+h2 {
+  font-size: 20px;
+  color: DarkBlue;
+}
+/* Table captions (header) */
+caption {
+      color: Black;
+      font-size: 1.3em;
+}
+/* Figure captions (legend) */
+p.caption {
+  font-size: 1.3em;
+}
+```
+```{r setup, message=F, warning=FALSE}
+library(DESeq2)
+library(knitr)
+```
+
+# Introduction
+
+This specific dataset analyzed is selected samples from the paper, *"A high-resolution mRNA expression time course of embryonic development in zebrafish".*^[A high-resolution mRNA expression time course of embryonic development in zebrafish, White et al., (2017)  *eLife* (https://elifesciences.org/articles/30860#content)] Specifically, the samples selected were of all samples of three specific time points of the total RNA captured by pooled zebrafish embryos, Protruding Mouth, Day-4, and Day-5 (samples labeled zmp120-zmp122). I hypothesized that in embryogenesis, I expect to see more and more differentially expressed genes within the HOX gene family and other cell differentiation genes with respect to earlier timepoints.
+
+## Biological Background
+
+HOX genes are known to play a fundamental role in the morphogenesis of the vertebrate embryo, providing cells with regional information along the main body axis.^[Homeobox Genes in Embryogenesis and Pathogenesis, Mark et al., (1997) *Pediatric Research*  (https://www.nature.com/articles/pr19972506)] For zebrafish specifically, Hox genes are implicated in conferring regional identity to the anteroposterior axis of the developing embryo, and as such, we should expect differentiation of HOX expression as the vertabrae in the embryo develops.^[Zebrafish hox genes: genomic organization and modified colinear expression patterns in the trunk, Prince et al., (1998) *Development* (https://pubmed.ncbi.nlm.nih.gov/9425136/)]
+
+## Personal Interest
+
+I was personally interested in working with a new model organism that I have not worked in and running the DESeq2 method onto the samples. Most of my work is with mouse models of some form of Ctrl vs Treatment set up using a predefined pipeline using EdgeR. I thought it would be interesting to work with a developmental embryo, where we should expect to see highly differentiated gene expression across days as parts of the embryo/larvae is being defined/grown. I've always been interested in learning more about embryo development, so this was a perfect chance to learn more. 
+
+Here I wanted to work with a new type of model organism I have not worked with, which led me to *danio rerio*. Zebrafish are commonly used in embryo and vertebrae development, and as such, they are a perfect model to use here.^[Zebrafish: Development of a Vertebrate Model Organism, J Meyers, (2018) *Current Protocols* (https://currentprotocols.onlinelibrary.wiley.com/doi/abs/10.1002/cpet.19)] I thought it would be interesting to work with a less common model organism, as when compared to mice and humans, zebrafish should be less clearly annotated, and this will present unique and unusual challenges to solve.
+
+I have worked with rats as a model organism before, and I remember that being a struggle to deal with, so I thought it would be fun to see what difficulties will arise when working with zebrafish data, as it should also be less well annotated than human/mice. Embryogenesis does come with its own host of issues, including the issue of lack of genetic material when compared to a mature host, so I was also interested in seeing if this would cause problems on my downstream analysis.
+
+# Results
+
+From the results, we do actually see large variabilities between the timepoints. 
+
+```{r Figure1, fig.height=12, fig.width=12}
+
+```
+
+## Limitations
+
+So there was a number of issues that I ran into when dealing with the data:
+
+1. The data is actually total RNA instead of poly A enriched mRNA, which I was really only interested in, meaning some of the data was wasted and not analyzed.
+2. There are not a lot of reads that aligned overall, with ~5M reads being assigned to features for each sample, which will reduce power for much of the analysis.
+3. 5 replicates for each day limits the total power as well of the experiment.
+4. I was unable to access the totality of the dataset, and instead worked with just three of the timepoints available, when there were 18 overall.
+5. The timepoints selected are not an even split of time or developmental stages as day 4 and 5 are the last two timepoints of their experiment, while protruding mouth is somewhere closer to the middle.
+
+These limitations do reduce the power of this experiment and does limit any conclusion being made as we just lack the genetic material to make large conclusions even with the large variabilities between the timepoints, as some of the variability could be just due to the lack of saturated sequencing depth or overall sequencing expression at that time point. 
+
+
+# Methods
+
+## Pre-Processing Steps:
+
+1. Files were downloaded via ftp using the ENA project ID of PRJEB12982. From here we selected three days of files that did fully download, Protruding-Mouth, Day-4, and Day-5. (I kept running into an issue where every other file was failing to download, and as such not all the files for each sample would download. Here I had to preselect for complete groups, and this is what I ended up with. I believe it was some type of error with one of their download nodes. I attempted this a few times across a week or two, and there were no large changes unfortunately.)
+2. Each sample's fastq reads were merged into their respective paired ends (R1, R2), and the samples were trimmed for adapters using trimgalore with Illumina adapters (as the samples were using TruSeq Adapters). Fastqc was also ran here
+3. Samples were then aligned with STAR with mostly default parameters. (One change in outFilterMultimapNmax @ 4. We use this at our core. I'm not sure if this makes a large difference at all, but could be tested eventually.)
+4. Bamqc was ran.
+5. MultiQC was ran on the collected fastqc outputs.
+6. Features counts were ran with the paired end option `-p` and `-s 2` after glancing into the outputs (where we see that the reverse strand led to higher assignment)
+
+## DESeq Analysis
+
+Here we looked into the QC. In these steps we looked at the feature counts summary plot, gene body coverage, along with a basic rlog'd PCA of the object. Code to generate these figures are included in the [qc_processing.Rmd](qc_processing.html), along with other plots generated that glanced more into the QC.
+
+```{r QCfigure, fig.height=12, fig.width=12}
+
+
+```
+From this we do see that that the data is relatively sparse as we only have ~5M reads per sample, but the samples are highly variable as we see a clear differentiation in the first PC, meaning the majority of the transcriptional change that was captured is along our timecourse. However, we do have a decent number of unassigned features (~10-20% of total reads). More work can be done to assign them, as in their protocol the looked at lincRNA and miRNA for these total RNA samples, but this would require further preprocessing to separate and then align. If I had more time, this would be an avenue to consider pursuing.
+
+Finally the gene body coverage plot does display the expected 3' end coverage as this is a 3-seq library prep. Other qc outputs and multiqc reports can be found in the outputs folder in the github repository.
+
+## Dataset
+
+Glancing into our DESeq dataset object:
+
+```{r, summarytable, echo=FALSE}
+dds = readRDS("outputs/dds.rds")
+kable(colData(dds), caption = "Table 1. Dataset Object and Column Features", format = "markdown")
+```
+Row data cleaning was performed to remove the 1 to many mappings for the gene symbols and zmp. These steps are found in qc_processing using biomart to grab the gene names. Gene names that mapped to the same gene id were concatenated using a semicolon, as I am unsure which gene name is "more" correct. (I love data cleaning!!) 
+```{r rowsummary, echo=FALSE}
+kable(head(rowData(dds),n=100), caption = "Table 1. Row Data features and Cleaning", format = "markdown")
+```
+
+# Discussion
+
+## The Good
+
+
+
+## The Bad
+
+As explained briefly in the limitations, I actually really struggled with data download, as there were much more timepoints available to download, so I would have actually liked to have a few more timepoints when doing the analysis. Unfortunately, this was not possible due to the struggles I had with getting the data downloaded. Specifically, we do see from earlier research that they did see HOX differentiation occur particularly in the anteroposterior, and getting the timepoint where this occurs exactly would have been fun to look at... Unfortunate.This lack of timepoints also removes capabilities of running this as a timepoint using `fission` and the examples run by Michael Love in his [vignette](http://master.bioconductor.org/packages/release/workflows/vignettes/rnaseqGene/inst/doc/rnaseqGene.html).^[RNA-seq workflow: gene-level exploratory analysis and differential expression, Love et Al., (2019)]
+
+Second, power will be an issue with almost all of this analysis. We simply do not have a huge number of reads, and with almost 20% not being assigned to a gene, we will do lose a lot, and we cannot make any strong claims beyond what things that are obvious. This limitations may not even be solved with more sequencing, as the multiqc report does already have ~20% duplication rate as well, meaning we are perhaps capturing the totality of the gene signature at these timepoints. This is probably something that could be clarified with a deeper dive into expected transcriptional signatures of embryos/larvae, as we should not expect large transcriptional signatures. 
+
+The replicates are already pooled samples, meaning that the signature of each replicate is actually the combined signal of the samples, and it instead serves as a technical replicate of each other. We should see mostly homogeneity as they are derived from the same pooling of the samples. This limitation is again due to the depth of sequencing for embryos.
+
+
+# Data Availability
+Data and scripts used for this pipeline can be found here:
+[Link](https://github.com/MaxLChao/RNASeq_pipeline.git)
+
+```{r, knitrReport, echo=FALSE}
+knitr::knit_exit()
+```

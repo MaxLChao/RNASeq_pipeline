@@ -128,8 +128,32 @@ dds = readRDS("outputs/dds.rds")
 ntd<-normTransform(dds)
 select <- grep(rowData(ntd)$SYMBOL,pattern="hox")
 df <- as.data.frame(colData(dds)[,"stageName"])
-pheatmap(assay(ntd)[select,], cluster_rows=FALSE, show_rownames=TRUE,
+colnames(df)<-"stageName"
+rownames(df)<-colnames(ntd)
+pheatmap(assay(ntd)[select,], cluster_rows=TRUE, labels_row=grep(rowData(ntd)$SYMBOL,pattern="hox", value=TRUE),
          cluster_cols=TRUE, annotation_col=df)
 
 ```
 
+From this we do see that unfortunately... all of the samples seem to just be relatively prolific in HOX expression across the three timepoints chosen. This may be due to the fact that these are later timepoints and are bulk samples. We capture the entire signal and as such we do not have the distinction of where these Hox genes are being expressed across the embryo, and we only know that the genes are being highly expressed. Still we do see some differences in the hox expression. Particularly, there does seem to be some differences in expression between the Protruding mouth when compared to day 4 and 5.
+
+
+### HOX gene exp plots
+```{r gene expression plots}
+# get pvals for comparisons across each other
+sig_4v5= (res4v5[select,]$padj < 0.05)
+sig_4vM= (res4vM[select,]$padj < 0.05)
+sig_5vM= (res5vM[select,]$padj < 0.05)
+df_padj_vals = do.call(cbind, list(res4v5[select,]$padj, 
+                     res4vM[select,]$padj, 
+                     res5vM[select,]$padj))
+# remove
+
+(for (i in select){
+    
+    plotCounts(dds, gene=i, intgroup="stageName", main = "", sub=paste()) 
+    title(rowData(dds)[rownames(dds[i,]),]$SYMBOL)
+  }
+})
+
+```
